@@ -1,47 +1,51 @@
-fun s:disabled() abort
-	return !get(g:, 'cc_align_enabled', 1) || &cc is# ''
-endfun
-
 fun! s:get_stops() abort
 	return &cc->split(',')->map({_, v -> str2nr(v)})->sort('n')
 endfun
 
-fun! s:tab() abort
-	if &shiftround
-		return repeat(' ', &ts - col('.') % &ts) 
-	endif
-	return repeat(' ', &ts)
-endfun
-
-fun! cc_align#tab() abort
-	if s:disabled() | return "\<Tab>" | endif
+fun! cc_align#right(insmode) abort
 	let col = virtcol('.')
 	for s in s:get_stops()
 		if s > col
-			return repeat(' ', s - col)
+			if a:insmode
+				return repeat(' ', s - col)
+			else
+				return (s - col) .. 'l'
+			endif
 		endif
 	endfor
-	return s:tab()
+	return ''
 endfun
 
-fun! cc_align#tab_end() abort
-	if s:disabled() | return "\<S-Tab>" | endif
+fun! cc_align#left(insmode) abort
+	let col = virtcol('.')
+	for s in s:get_stops()->reverse()
+		if s < col
+			if a:insmode
+				return "\<C-o>d" .. (col - s) .. 'h'
+			else
+				return (col - s) .. 'h'
+			endif
+		endif
+	endfor
+	return ''
+endfun
+
+fun! cc_align#right_end() abort
 	let col = virtcol('$') - 1
 	for s in s:get_stops()
 		if s > col
 			return repeat(' ', s - col)
 		endif
 	endfor
-	return s:tab()
+	return ''
 endfun
 
-fun! cc_align#bs() abort
-	if s:disabled() | return "\<BS>" | endif
-	let col = virtcol('.')
+fun! cc_align#left_end() abort
+	let col = virtcol('$') - 1
 	for s in s:get_stops()->reverse()
 		if s < col
 			return "\<C-o>d" .. (col - s) .. 'h'
 		endif
 	endfor
-	return "\<BS>"
+	return ''
 endfun
